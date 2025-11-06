@@ -325,6 +325,90 @@
   }
 }
 
+/* Dark Theme Support */
+.dark-theme .task-form-container {
+  background: var(--card-bg);
+}
+
+.dark-theme .task-form-header {
+  background: var(--card-bg);
+  border-bottom-color: var(--border-color);
+}
+
+.dark-theme .task-form-header h2 {
+  color: var(--text-primary);
+}
+
+.dark-theme .close-btn {
+  background: #374151;
+  color: var(--text-primary);
+}
+
+.dark-theme .close-btn:hover {
+  background: #4b5563;
+}
+
+.dark-theme .form-group label {
+  color: var(--text-primary);
+}
+
+.dark-theme .form-group input,
+.dark-theme .form-group textarea,
+.dark-theme .form-group select {
+  background: #374151;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-theme .form-group input::placeholder,
+.dark-theme .form-group textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.dark-theme .form-group input:focus,
+.dark-theme .form-group textarea:focus,
+.dark-theme .form-group select:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+}
+
+.dark-theme .tags-input-container {
+  background: #374151;
+  border-color: var(--border-color);
+}
+
+.dark-theme .tags-input-container:focus-within {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+}
+
+.dark-theme .tag-item {
+  background: #4b5563;
+  color: var(--text-primary);
+}
+
+.dark-theme .tag-item button {
+  color: var(--text-secondary);
+}
+
+.dark-theme .tag-item button:hover {
+  color: #f87171;
+}
+
+.dark-theme .tag-input {
+  color: var(--text-primary);
+}
+
+.dark-theme .btn-secondary {
+  background: #374151;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .btn-secondary:hover {
+  background: #4b5563;
+}
+
 /* Custom scrollbar */
 .task-form-container::-webkit-scrollbar {
   width: 8px;
@@ -342,4 +426,16 @@
 
 .task-form-container::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
+}
+
+.dark-theme .task-form-container::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark-theme .task-form-container::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark-theme .task-form-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }

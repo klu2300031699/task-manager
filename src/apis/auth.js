@@ -32,7 +32,12 @@ const saveUsers = (users) => {
 // Get all users for assignment dropdown
 export const getAllUsers = () => {
   const users = getUsers();
-  return users.map(user => ({ id: user.id, name: user.name, username: user.username }));
+  return users.map(user => ({ 
+    id: user.id, 
+    name: user.name, 
+    username: user.username,
+    avatarColor: user.avatarColor || '#6366f1'
+  }));
 };
 
 // Register new user
@@ -100,4 +105,65 @@ export const getCurrentUser = () => {
 // Check if user is authenticated
 export const isAuthenticated = () => {
   return getCurrentUser() !== null;
+};
+
+// Get full user details (including password for edit)
+export const getUserDetails = (userId) => {
+  const users = getUsers();
+  return users.find(u => u.id === userId);
+};
+
+// Update user profile
+export const updateUser = (userId, updateData) => {
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) {
+    return { success: false, message: 'User not found' };
+  }
+  
+  // Check if username is being changed and already exists
+  if (updateData.username && updateData.username !== users[userIndex].username) {
+    const existingUser = users.find(u => u.username.toLowerCase() === updateData.username.toLowerCase() && u.id !== userId);
+    if (existingUser) {
+      return { success: false, message: 'Username already exists' };
+    }
+  }
+  
+  // Check if email is being changed and already exists
+  if (updateData.email && updateData.email !== users[userIndex].email) {
+    const existingEmail = users.find(u => u.email.toLowerCase() === updateData.email.toLowerCase() && u.id !== userId);
+    if (existingEmail) {
+      return { success: false, message: 'Email already exists' };
+    }
+  }
+  
+  // Update user data
+  users[userIndex] = {
+    ...users[userIndex],
+    ...updateData,
+    updatedAt: new Date().toISOString()
+  };
+  
+  saveUsers(users);
+  
+  // Update current user in localStorage
+  const currentUser = getCurrentUser();
+  if (currentUser && currentUser.id === userId) {
+    const updatedUserData = { 
+      id: users[userIndex].id, 
+      username: users[userIndex].username, 
+      name: users[userIndex].name,
+      avatarColor: users[userIndex].avatarColor,
+      theme: users[userIndex].theme
+    };
+    localStorage.setItem('currentUser', JSON.stringify(updatedUserData));
+    
+    // Dispatch custom event for profile update
+    window.dispatchEvent(new CustomEvent('profileUpdated', { detail: updatedUserData }));
+    
+    return { success: true, user: updatedUserData };
+  }
+  
+  return { success: true, user: users[userIndex] };
 };

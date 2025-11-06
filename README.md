@@ -13,6 +13,17 @@ A modern, feature-rich task management application built with React and Vite. Cu
   - Username: `Ashesh` / Password: `Ashesh`
 - **Session Management**: Persistent login across page refreshes
 
+### 👤 Profile Management (NEW!)
+- **Comprehensive Profile Editor**: Click on your profile avatar to access
+- **4 Powerful Tabs**:
+  - 📝 **Profile Tab**: Edit name, username, email, and password
+  - 🎨 **Avatar Tab**: Choose from 10 beautiful color schemes for your avatar
+  - 🌙 **Theme Tab**: Light mode, Dark mode, or Auto (follows system)
+  - 📊 **Statistics Tab**: View your task completion stats and account info
+- **Real-time Updates**: All changes apply instantly across the app
+- **Secure Password Change**: Verify current password before updating
+- **Validation**: Email format validation and duplicate prevention
+
 ### 📋 Task Management
 - **Create Tasks**: Add new tasks with detailed information
 - **Edit Tasks**: Modify existing tasks
@@ -34,9 +45,27 @@ A modern, feature-rich task management application built with React and Vite. Cu
 
 ### 🎨 Design Features
 - Modern gradient color scheme (purple to violet)
+- **Dark mode support** with smooth transitions
 - Fully responsive design (mobile, tablet, desktop)
 - Smooth animations and transitions
 - Beautiful task cards with hover effects
+- Customizable avatar colors
+- Interactive UI elements with micro-animations
+- Toast notifications for user feedback
+
+### ⚡ Quick Actions (NEW!)
+Floating action button with powerful utilities:
+- **📤 Export Tasks**: Download all your tasks as JSON
+- **📥 Import Tasks**: Import tasks from JSON file
+- **🗑️ Clear Completed**: Bulk delete all completed tasks
+- Smooth animations and easy access
+
+### 🔔 Smart Notifications
+- Real-time toast notifications
+- Success, error, warning, and info messages
+- Auto-dismiss after 4 seconds
+- Manual dismiss option
+- Beautiful color-coded alerts
 
 ## 📦 Installation
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getTaskStats } from '../apis/taskService';
+import { getTaskStats, exportTasks, importTasks, clearCompletedTasks } from '../apis/taskService';
+import { showNotification } from './Notification';
 import TaskList from './TaskList';
 import TaskForm from './TaskForm';
+import QuickActions from './QuickActions';
 import './Dashboard.css';
 
 const Dashboard = ({ user, onTasksChange }) => {
@@ -38,6 +40,48 @@ const Dashboard = ({ user, onTasksChange }) => {
   const handleCloseForm = () => {
     setShowTaskForm(false);
     setEditingTask(null);
+  };
+
+  const handleExportTasks = () => {
+    try {
+      exportTasks(user.id);
+      showNotification('Tasks exported successfully!', 'success');
+    } catch (error) {
+      showNotification('Failed to export tasks', 'error');
+    }
+  };
+
+  const handleImportTasks = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        try {
+          const count = await importTasks(file, user.id);
+          showNotification(`Successfully imported ${count} tasks!`, 'success');
+          handleTaskChange();
+        } catch (error) {
+          showNotification('Failed to import tasks. Please check the file format.', 'error');
+        }
+      }
+    };
+    input.click();
+  };
+
+  const handleClearCompleted = () => {
+    try {
+      const count = clearCompletedTasks(user.id);
+      if (count > 0) {
+        showNotification(`Deleted ${count} completed tasks`, 'success');
+        handleTaskChange();
+      } else {
+        showNotification('No completed tasks to delete', 'info');
+      }
+    } catch (error) {
+      showNotification('Failed to clear completed tasks', 'error');
+    }
   };
 
   return (
@@ -128,6 +172,12 @@ const Dashboard = ({ user, onTasksChange }) => {
           onTaskChange={handleTaskChange}
         />
       )}
+
+      <QuickActions 
+        onExportTasks={handleExportTasks}
+        onImportTasks={handleImportTasks}
+        onClearCompleted={handleClearCompleted}
+      />
     </div>
   );
 };

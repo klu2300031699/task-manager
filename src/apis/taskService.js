@@ -82,14 +82,82 @@ export const deleteTask = (taskId) => {
 // Get task statistics
 export const getTaskStats = (userId) => {
   const tasks = getUserTasks(userId);
+  const total = tasks.length;
+  const completed = tasks.filter(t => t.status === 'completed').length;
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+  
   return {
     total: tasks.length,
     active: tasks.filter(t => t.status === 'active').length,
-    completed: tasks.filter(t => t.status === 'completed').length,
+    completed: completed,
+    pending: tasks.filter(t => t.status === 'active').length,
+    completionRate: completionRate,
     overdue: tasks.filter(t => {
       if (t.status === 'completed') return false;
       const dueDate = new Date(t.dueDate);
       return dueDate < new Date();
     }).length
   };
+};
+
+// Export tasks to JSON file
+export const exportTasks = (userId) => {
+  const tasks = getUserTasks(userId);
+  const dataStr = JSON.stringify(tasks, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `tasks_export_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+// Import tasks from JSON file
+export const importTasks = (file, userId) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedTasks = JSON.parse(e.target.result);
+        if (!Array.isArray(importedTasks)) {
+          reject(new Error('Invalid file format'));
+          return;
+        }
+        
+        const tasks = getAllTasks();
+        const newTasks = importedTasks.map(task => ({
+          ...task,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          createdBy: userId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }));
+        
+        const updatedTasks = [...tasks, ...newTasks];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTasks));
+        notifyTasksUpdated();
+        resolve(newTasks.length);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
+  });
+};
+
+// Clear all completed tasks for a user
+export const clearCompletedTasks = (userId) => {
+  const tasks = getAllTasks();
+  const filteredTasks = tasks.filter(task => {
+    // Keep tasks that are not completed OR not owned by this user
+    return task.status !== 'completed' || (task.createdBy != userId && task.assignedTo != userId);
+  });
+  const deletedCount = tasks.length - filteredTasks.length;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredTasks));
+  notifyTasksUpdated();
+  return deletedCount;
 };

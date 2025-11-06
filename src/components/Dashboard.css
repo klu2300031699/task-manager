@@ -173,6 +173,36 @@
   }
 }
 
+/* Dark Theme Support */
+.dark-theme .dashboard {
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+.dark-theme .welcome-message h2 {
+  color: var(--text-primary);
+}
+
+.dark-theme .welcome-message p {
+  color: var(--text-secondary);
+}
+
+.dark-theme .stat-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .stat-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.dark-theme .stat-value {
+  color: var(--text-primary);
+}
+
+.dark-theme .stat-label {
+  color: var(--text-secondary);
+}
+
 @media (max-width: 480px) {
   .stats-grid {
     grid-template-columns: 1fr;
