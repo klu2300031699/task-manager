@@ -24,7 +24,7 @@
   transform: translateY(0) scale(1);
 }
 
-.action-btn {
+.quick-actions .action-btn {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -42,15 +42,15 @@
   animation: slideUp 0.3s ease-out backwards;
 }
 
-.action-btn:nth-child(1) {
+.quick-actions .action-btn:nth-child(1) {
   animation-delay: 0.05s;
 }
 
-.action-btn:nth-child(2) {
+.quick-actions .action-btn:nth-child(2) {
   animation-delay: 0.1s;
 }
 
-.action-btn:nth-child(3) {
+.quick-actions .action-btn:nth-child(3) {
   animation-delay: 0.15s;
 }
 
@@ -65,26 +65,26 @@
   }
 }
 
-.action-btn svg {
+.quick-actions .action-btn svg {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
 
-.action-btn:hover {
+.quick-actions .action-btn:hover {
   transform: translateX(-4px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
-.export-btn {
+.quick-actions .export-btn {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }
 
-.import-btn {
+.quick-actions .import-btn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-.clear-btn {
+.quick-actions .clear-btn {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
@@ -142,7 +142,7 @@
 }
 
 /* Dark theme support */
-.dark-theme .action-btn {
+.dark-theme .quick-actions .action-btn {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -171,17 +171,17 @@
     bottom: 65px;
   }
 
-  .action-btn {
+  .quick-actions .action-btn {
     padding: 10px 16px;
     font-size: 13px;
     min-width: 160px;
   }
 
-  .action-btn span {
+  .quick-actions .action-btn span {
     font-size: 12px;
   }
 
-  .action-btn svg {
+  .quick-actions .action-btn svg {
     width: 18px;
     height: 18px;
   }
