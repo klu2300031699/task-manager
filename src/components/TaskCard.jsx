@@ -111,10 +111,10 @@ const TaskCard = ({ task, currentUser, onTaskChange, onEdit }) => {
             {createdByUser && createdByUser.id != assignedUser?.id && (
               <div 
                 className="user-avatar secondary" 
-                title={`Created by: ${createdByUser.name}`}
-                style={{ backgroundColor: createdByUser?.avatarColor || '#3b82f6' }}
+                title={`Created by: ${createdByUser.name || createdByUser.username || 'Unknown'}`}
+                style={{ backgroundColor: createdByUser.avatarColor || '#6366f1' }}
               >
-                {createdByUser.name.charAt(0).toUpperCase()}
+                {(createdByUser.name || createdByUser.username || 'U').charAt(0).toUpperCase()}
               </div>
             )}
           </div>

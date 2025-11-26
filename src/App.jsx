@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getCurrentUser, isAuthenticated } from './apis/auth';
-import Header from './components/Header';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import Header from './components/Header';
 import Notification from './components/Notification';
 import './App.css';
 
@@ -13,56 +12,51 @@ function App() {
 
   useEffect(() => {
     // Check if user is already logged in
-    if (isAuthenticated()) {
-      const currentUser = getCurrentUser();
-      setUser(currentUser);
-      setTheme(currentUser.theme || 'light');
+    try {
+      const currentUserStr = localStorage.getItem('currentUser');
+      if (currentUserStr) {
+        const currentUser = JSON.parse(currentUserStr);
+        // Validate user object has required properties
+        if (currentUser && currentUser.id && currentUser.username) {
+          console.log('Found existing user:', currentUser);
+          setUser(currentUser);
+          setTheme(currentUser?.theme || 'light');
+        } else {
+          console.warn('Invalid user data in localStorage, clearing...');
+          localStorage.removeItem('currentUser');
+        }
+      }
+    } catch (err) {
+      console.error('Error loading user:', err);
+      localStorage.removeItem('currentUser');
     }
     setLoading(false);
-
-    // Listen for profile updates
-    const handleProfileUpdate = (event) => {
-      setUser(event.detail);
-      setTheme(event.detail.theme || 'light');
-    };
-
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-
-    return () => {
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
   }, []);
 
   useEffect(() => {
     // Apply theme to document
     if (theme === 'dark') {
       document.documentElement.classList.add('dark-theme');
-    } else if (theme === 'auto') {
-      // Check system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        document.documentElement.classList.add('dark-theme');
-      } else {
-        document.documentElement.classList.remove('dark-theme');
-      }
     } else {
       document.documentElement.classList.remove('dark-theme');
     }
   }, [theme]);
 
   const handleLogin = (userData) => {
+    console.log('User logged in:', userData);
     setUser(userData);
-    setTheme(userData.theme || 'light');
+    setTheme('light');
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('currentUser');
     setUser(null);
     setTheme('light');
   };
 
   const handleProfileUpdate = (updatedUser) => {
     setUser(updatedUser);
-    setTheme(updatedUser.theme || 'light');
+    setTheme(updatedUser?.theme || 'light');
   };
 
   if (loading) {

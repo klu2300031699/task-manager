@@ -56,51 +56,58 @@ const Login = ({ onLogin }) => {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    if (isSignup) {
-      // Handle signup
-      if (!validateSignup()) {
-        setIsLoading(false);
-        return;
-      }
+    try {
+      if (isSignup) {
+        // Handle signup
+        if (!validateSignup()) {
+          setIsLoading(false);
+          return;
+        }
 
-      const result = register({
-        name: formData.name,
-        email: formData.email,
-        username: formData.username,
-        password: formData.password
-      });
+        const result = await register({
+          name: formData.name,
+          email: formData.email,
+          username: formData.username,
+          password: formData.password
+        });
 
-      setTimeout(() => {
+        if (result.success) {
+          // After successful registration, automatically login
+          const loginResult = await login(formData.username, formData.password);
+          if (loginResult.success) {
+            onLogin(loginResult.user);
+          } else {
+            setError(loginResult.message);
+          }
+        } else {
+          setError(result.message);
+        }
+      } else {
+        // Handle login
+        if (!formData.username.trim() || !formData.password.trim()) {
+          setError('Please enter both username and password');
+          setIsLoading(false);
+          return;
+        }
+
+        const result = await login(formData.username, formData.password);
+        
         if (result.success) {
           onLogin(result.user);
         } else {
           setError(result.message);
         }
-        setIsLoading(false);
-      }, 500);
-    } else {
-      // Handle login
-      if (!formData.username.trim() || !formData.password.trim()) {
-        setError('Please enter both username and password');
-        setIsLoading(false);
-        return;
       }
-
-      const result = login(formData.username, formData.password);
-      
-      setTimeout(() => {
-        if (result.success) {
-          onLogin(result.user);
-        } else {
-          setError(result.message);
-        }
-        setIsLoading(false);
-      }, 500);
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

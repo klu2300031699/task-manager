@@ -13,13 +13,15 @@ const Dashboard = ({ user, onTasksChange }) => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const loadStats = () => {
-    const taskStats = getTaskStats(user.id);
-    setStats(taskStats);
+    if (user && user.id) {
+      const taskStats = getTaskStats(user.id);
+      setStats(taskStats);
+    }
   };
 
   useEffect(() => {
     loadStats();
-  }, [user.id]);
+  }, [user?.id]);
 
   const handleTaskChange = () => {
     loadStats();
@@ -89,7 +91,7 @@ const Dashboard = ({ user, onTasksChange }) => {
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div className="welcome-message">
-            <h2>Welcome back, {user.name}! 👋</h2>
+            <h2>Welcome back, {user.name || user.username || 'User'}! 👋</h2>
             <p>Here's what's happening with your tasks today</p>
           </div>
           <button className="new-task-btn" onClick={handleNewTask}>

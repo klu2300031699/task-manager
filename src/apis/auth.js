@@ -1,94 +1,70 @@
 // Authentication service for user login/signup
-const USERS_STORAGE_KEY = 'users';
-
-// Initialize default users
-const DEFAULT_USERS = [
-  { id: 1, username: 'Gnanesh', password: 'Gnanesh', name: 'Gnanesh', email: 'gnanesh@example.com', createdAt: new Date().toISOString() },
-  { id: 2, username: 'Ashika', password: 'Ashika', name: 'Ashika', email: 'ashika@example.com', createdAt: new Date().toISOString() },
-  { id: 3, username: 'Ashesh', password: 'Ashesh', name: 'Ashesh', email: 'ashesh@example.com', createdAt: new Date().toISOString() }
-];
-
-// Initialize users in localStorage if not present
-const initializeUsers = () => {
-  const existingUsers = localStorage.getItem(USERS_STORAGE_KEY);
-  if (!existingUsers) {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
-  }
-};
-
-initializeUsers();
-
-// Get all users from localStorage
-const getUsers = () => {
-  const users = localStorage.getItem(USERS_STORAGE_KEY);
-  return users ? JSON.parse(users) : DEFAULT_USERS;
-};
-
-// Save users to localStorage
-const saveUsers = (users) => {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-};
-
-// Get all users for assignment dropdown
-export const getAllUsers = () => {
-  const users = getUsers();
-  return users.map(user => ({ 
-    id: user.id, 
-    name: user.name, 
-    username: user.username,
-    avatarColor: user.avatarColor || '#6366f1'
-  }));
-};
+const BASE_URL = 'http://localhost:3221/api/user';
 
 // Register new user
-export const register = (userData) => {
-  const users = getUsers();
-  
-  // Check if username already exists
-  const existingUser = users.find(u => u.username.toLowerCase() === userData.username.toLowerCase());
-  if (existingUser) {
-    return { success: false, message: 'Username already exists' };
+export const register = async (userData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName: userData.name,
+        email: userData.email,
+        username: userData.username,
+        password: userData.password,
+        confirmPassword: userData.password
+      }),
+    });
+
+    const result = await response.text();
+
+    if (response.ok) {
+      return { success: true, message: result };
+    } else {
+      return { success: false, message: result };
+    }
+  } catch (error) {
+    console.error('Register error:', error);
+    return { success: false, message: 'Network error. Please check if backend is running.' };
   }
-  
-  // Check if email already exists
-  const existingEmail = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
-  if (existingEmail) {
-    return { success: false, message: 'Email already exists' };
-  }
-  
-  // Create new user
-  const newUser = {
-    id: Date.now(), // Use timestamp as unique ID
-    username: userData.username,
-    password: userData.password,
-    name: userData.name,
-    email: userData.email,
-    createdAt: new Date().toISOString()
-  };
-  
-  users.push(newUser);
-  saveUsers(users);
-  
-  const userResponse = { id: newUser.id, username: newUser.username, name: newUser.name };
-  localStorage.setItem('currentUser', JSON.stringify(userResponse));
-  
-  return { success: true, user: userResponse };
 };
 
 // Login function
-export const login = (username, password) => {
-  const users = getUsers();
-  const user = users.find(
-    u => u.username === username && u.password === password
-  );
-  
-  if (user) {
-    const userData = { id: user.id, username: user.username, name: user.name };
-    localStorage.setItem('currentUser', JSON.stringify(userData));
-    return { success: true, user: userData };
+export const login = async (username, password) => {
+  try {
+    const response = await fetch(`${BASE_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username,
+        password,
+      }),
+    });
+
+    if (response.ok) {
+      const user = await response.json();
+      // Map backend user to frontend format
+      const userData = {
+        id: user.id,
+        username: user.username,
+        name: user.fullName || user.username,
+        email: user.email
+      };
+      console.log('Login successful, user data:', userData);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      return { success: true, user: userData };
+    } else {
+      const error = await response.text();
+      return { success: false, message: error };
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, message: 'Network error. Please check if backend is running.' };
   }
-  
-  return { success: false, message: 'Invalid username or password' };
 };
 
 // Logout function
@@ -98,8 +74,16 @@ export const logout = () => {
 
 // Get current logged in user
 export const getCurrentUser = () => {
-  const userStr = localStorage.getItem('currentUser');
-  return userStr ? JSON.parse(userStr) : null;
+  try {
+    const userStr = localStorage.getItem('currentUser');
+    if (userStr) {
+      return JSON.parse(userStr);
+    }
+  } catch (error) {
+    console.error('Error parsing currentUser from localStorage:', error);
+    localStorage.removeItem('currentUser');
+  }
+  return null;
 };
 
 // Check if user is authenticated
@@ -107,55 +91,58 @@ export const isAuthenticated = () => {
   return getCurrentUser() !== null;
 };
 
-// Get full user details (including password for edit)
-export const getUserDetails = (userId) => {
-  const users = getUsers();
-  return users.find(u => u.id === userId);
+// Get all users for assignment dropdown
+export const getAllUsers = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/all`);
+    if (response.ok) {
+      const users = await response.json();
+      return users.map(user => ({
+        id: user.id,
+        name: user.fullName,
+        username: user.username,
+        avatarColor: '#6366f1'
+      }));
+    } else {
+      console.error('Failed to fetch users from backend');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
 };
 
-// Update user profile
+// Get full user details (for profile edit)
+export const getUserDetails = async (userId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/all`);
+    if (response.ok) {
+      const users = await response.json();
+      const user = users.find(u => u.id === userId);
+      if (user) {
+        return {
+          id: user.id,
+          username: user.username,
+          name: user.fullName,
+          email: user.email
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+  }
+  return null;
+};
+
+// Update user profile (placeholder - needs backend endpoint)
 export const updateUser = (userId, updateData) => {
-  const users = getUsers();
-  const userIndex = users.findIndex(u => u.id === userId);
-  
-  if (userIndex === -1) {
-    return { success: false, message: 'User not found' };
-  }
-  
-  // Check if username is being changed and already exists
-  if (updateData.username && updateData.username !== users[userIndex].username) {
-    const existingUser = users.find(u => u.username.toLowerCase() === updateData.username.toLowerCase() && u.id !== userId);
-    if (existingUser) {
-      return { success: false, message: 'Username already exists' };
-    }
-  }
-  
-  // Check if email is being changed and already exists
-  if (updateData.email && updateData.email !== users[userIndex].email) {
-    const existingEmail = users.find(u => u.email.toLowerCase() === updateData.email.toLowerCase() && u.id !== userId);
-    if (existingEmail) {
-      return { success: false, message: 'Email already exists' };
-    }
-  }
-  
-  // Update user data
-  users[userIndex] = {
-    ...users[userIndex],
-    ...updateData,
-    updatedAt: new Date().toISOString()
-  };
-  
-  saveUsers(users);
-  
-  // Update current user in localStorage
+  // For now, just update localStorage
   const currentUser = getCurrentUser();
   if (currentUser && currentUser.id === userId) {
     const updatedUserData = { 
-      id: users[userIndex].id, 
-      username: users[userIndex].username, 
-      name: users[userIndex].name,
-      avatarColor: users[userIndex].avatarColor,
-      theme: users[userIndex].theme
+      ...currentUser,
+      ...updateData
     };
     localStorage.setItem('currentUser', JSON.stringify(updatedUserData));
     
@@ -165,5 +152,5 @@ export const updateUser = (userId, updateData) => {
     return { success: true, user: updatedUserData };
   }
   
-  return { success: true, user: users[userIndex] };
+  return { success: false, message: 'User not found' };
 };

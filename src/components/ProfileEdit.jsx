@@ -7,9 +7,9 @@ import './ProfileEdit.css';
 const ProfileEdit = ({ user, onClose, onUpdate }) => {
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
-    name: user.name,
-    username: user.username,
-    email: '',
+    name: user.name || user.username || '',
+    username: user.username || '',
+    email: user.email || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -272,7 +272,7 @@ const ProfileEdit = ({ user, onClose, onUpdate }) => {
           className="avatar-large" 
           style={{ backgroundColor: avatarColor }}
         >
-          {user.name.charAt(0).toUpperCase()}
+          {(user.name || user.username || 'U').charAt(0).toUpperCase()}
         </div>
       </div>
 

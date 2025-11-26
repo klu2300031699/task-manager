@@ -46,9 +46,9 @@ const Header = ({ user, onLogout, onProfileUpdate }) => {
                   className="user-avatar"
                   style={{ backgroundColor: user.avatarColor || '#6366f1' }}
                 >
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.name ? user.name.charAt(0).toUpperCase() : user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <span className="user-name">{user.name}</span>
+                <span className="user-name">{user.name || user.username || 'User'}</span>
               </div>
               <button className="logout-btn" onClick={handleLogout}>
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
