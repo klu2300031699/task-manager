@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUserDetails, updateUser } from '../apis/auth';
+import { getUserDetails, updateUser, changePassword } from '../apis/auth';
 import { getTaskStats } from '../apis/taskService';
 import { showNotification } from './Notification';
 import './ProfileEdit.css';
@@ -36,15 +36,19 @@ const ProfileEdit = ({ user, onClose, onUpdate }) => {
 
   useEffect(() => {
     // Load full user details
-    const userDetails = getUserDetails(user.id);
-    if (userDetails) {
-      setFormData(prev => ({
-        ...prev,
-        email: userDetails.email
-      }));
-      setAvatarColor(userDetails.avatarColor || '#6366f1');
-      setTheme(userDetails.theme || 'light');
-    }
+    const loadUserDetails = async () => {
+      const userDetails = await getUserDetails(user.id);
+      if (userDetails) {
+        setFormData(prev => ({
+          ...prev,
+          name: userDetails.name,
+          username: userDetails.username,
+          email: userDetails.email
+        }));
+      }
+    };
+
+    loadUserDetails();
 
     // Load task statistics
     const taskStats = getTaskStats(user.id);
@@ -96,59 +100,79 @@ const ProfileEdit = ({ user, onClose, onUpdate }) => {
     const updateData = {
       name: formData.name,
       username: formData.username,
-      email: formData.email,
-      avatarColor,
-      theme
+      email: formData.email
     };
 
-    // Handle password change if requested
-    if (formData.newPassword) {
-      if (!formData.currentPassword) {
-        setError('Please enter your current password');
-        setLoading(false);
-        return;
-      }
-
-      if (formData.newPassword !== formData.confirmPassword) {
-        setError('New passwords do not match');
-        setLoading(false);
-        return;
-      }
-
-      if (formData.newPassword.length < 3) {
-        setError('Password must be at least 3 characters');
-        setLoading(false);
-        return;
-      }
-
-      // Verify current password
-      const userDetails = getUserDetails(user.id);
-      if (userDetails.password !== formData.currentPassword) {
-        setError('Current password is incorrect');
-        setLoading(false);
-        return;
-      }
-
-      updateData.password = formData.newPassword;
-    }
-
-    const result = updateUser(user.id, updateData);
+    const result = await updateUser(user.id, updateData);
     setLoading(false);
 
     if (result.success) {
       setSuccess('Profile updated successfully!');
       showNotification('Profile updated successfully!', 'success');
+      
+      // Notify parent component
+      if (onUpdate) {
+        onUpdate(result.user);
+      }
+
+      // Close modal after 1.5 seconds
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } else {
+      setError(result.message);
+      showNotification(result.message, 'error');
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    // Validate password inputs
+    if (!formData.currentPassword) {
+      setError('Please enter your current password');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.newPassword) {
+      setError('Please enter a new password');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('New passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.newPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      setLoading(false);
+      return;
+    }
+
+    const result = await changePassword(
+      user.id, 
+      formData.currentPassword, 
+      formData.newPassword, 
+      formData.confirmPassword
+    );
+    setLoading(false);
+
+    if (result.success) {
+      setSuccess('Password changed successfully!');
+      showNotification('Password changed successfully!', 'success');
       setFormData(prev => ({
         ...prev,
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       }));
-      
-      // Notify parent component
-      if (onUpdate) {
-        onUpdate(result.user);
-      }
 
       // Close modal after 1.5 seconds
       setTimeout(() => {
@@ -247,6 +271,15 @@ const ProfileEdit = ({ user, onClose, onUpdate }) => {
               placeholder="Confirm new password"
             />
           </div>
+
+          <button 
+            type="button" 
+            className="btn-change-password" 
+            onClick={handlePasswordChange}
+            disabled={loading || !formData.currentPassword || !formData.newPassword}
+          >
+            {loading ? 'Changing...' : 'Change Password'}
+          </button>
         </div>
 
         {error && <div className="error-message">{error}</div>}
