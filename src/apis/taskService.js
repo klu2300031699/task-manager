@@ -1,5 +1,6 @@
 // Task management service
 const STORAGE_KEY = 'tasks';
+const BASE_URL = 'http://localhost:3221/api/tasks';
 
 // Initialize with sample tasks
 const initializeTasks = () => {
@@ -11,16 +12,37 @@ const initializeTasks = () => {
 
 initializeTasks();
 
-// Get all tasks
-export const getAllTasks = () => {
+// Get all tasks from backend
+export const getAllTasks = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/all`);
+    if (response.ok) {
+      const tasks = await response.json();
+      // Also sync with localStorage as fallback
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      return tasks;
+    }
+  } catch (error) {
+    console.error('Error fetching tasks from backend:', error);
+  }
+  // Fallback to localStorage
   const tasks = localStorage.getItem(STORAGE_KEY);
   return tasks ? JSON.parse(tasks) : [];
 };
 
 // Get tasks for a specific user (created by or assigned to)
-export const getUserTasks = (userId) => {
-  const tasks = getAllTasks();
-  // Use == instead of === to handle string/number comparison
+export const getUserTasks = async (userId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/user/${userId}`);
+    if (response.ok) {
+      const tasks = await response.json();
+      return tasks;
+    }
+  } catch (error) {
+    console.error('Error fetching user tasks:', error);
+  }
+  // Fallback to localStorage
+  const tasks = await getAllTasks();
   return tasks.filter(task => 
     task.createdBy == userId || task.assignedTo == userId
   );
@@ -38,8 +60,29 @@ const notifyTasksUpdated = () => {
 };
 
 // Create new task
-export const createTask = (taskData) => {
-  const tasks = getAllTasks();
+export const createTask = async (taskData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData),
+    });
+
+    if (response.ok) {
+      const newTask = await response.json();
+      notifyTasksUpdated();
+      return newTask;
+    } else {
+      console.error('Failed to create task on backend');
+    }
+  } catch (error) {
+    console.error('Error creating task:', error);
+  }
+  
+  // Fallback to localStorage
+  const tasks = await getAllTasks();
   const newTask = {
     id: Date.now().toString(),
     ...taskData,
@@ -53,9 +96,28 @@ export const createTask = (taskData) => {
 };
 
 // Update task
-export const updateTask = (taskId, updates) => {
-  const tasks = getAllTasks();
-  const taskIndex = tasks.findIndex(task => task.id === taskId);
+export const updateTask = async (taskId, updates) => {
+  try {
+    const response = await fetch(`${BASE_URL}/update/${taskId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (response.ok) {
+      const updatedTask = await response.json();
+      notifyTasksUpdated();
+      return updatedTask;
+    }
+  } catch (error) {
+    console.error('Error updating task:', error);
+  }
+
+  // Fallback to localStorage
+  const tasks = await getAllTasks();
+  const taskIndex = tasks.findIndex(task => task.id == taskId);
   
   if (taskIndex !== -1) {
     tasks[taskIndex] = {
@@ -71,17 +133,31 @@ export const updateTask = (taskId, updates) => {
 };
 
 // Delete task
-export const deleteTask = (taskId) => {
-  const tasks = getAllTasks();
-  const filteredTasks = tasks.filter(task => task.id !== taskId);
+export const deleteTask = async (taskId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/delete/${taskId}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      notifyTasksUpdated();
+      return true;
+    }
+  } catch (error) {
+    console.error('Error deleting task:', error);
+  }
+
+  // Fallback to localStorage
+  const tasks = await getAllTasks();
+  const filteredTasks = tasks.filter(task => task.id != taskId);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredTasks));
   notifyTasksUpdated();
   return true;
 };
 
 // Get task statistics
-export const getTaskStats = (userId) => {
-  const tasks = getUserTasks(userId);
+export const getTaskStats = async (userId) => {
+  const tasks = await getUserTasks(userId);
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'completed').length;
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;

@@ -11,11 +11,18 @@ const Dashboard = ({ user, onTasksChange }) => {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [error, setError] = useState(null);
 
-  const loadStats = () => {
-    if (user && user.id) {
-      const taskStats = getTaskStats(user.id);
-      setStats(taskStats);
+  const loadStats = async () => {
+    try {
+      if (user && user.id) {
+        const taskStats = await getTaskStats(user.id);
+        setStats(taskStats);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Error loading stats:', err);
+      setError('Failed to load task statistics');
     }
   };
 
@@ -32,6 +39,7 @@ const Dashboard = ({ user, onTasksChange }) => {
   const handleNewTask = () => {
     setEditingTask(null);
     setShowTaskForm(true);
+    setError(null);
   };
 
   const handleEditTask = (task) => {

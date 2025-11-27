@@ -1,10 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getAllUsers } from '../apis/auth';
 import { updateTask, deleteTask } from '../apis/taskService';
 import './TaskCard.css';
 
 const TaskCard = ({ task, currentUser, onTaskChange, onEdit }) => {
-  const users = getAllUsers();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const usersList = await getAllUsers();
+        setUsers(Array.isArray(usersList) ? usersList : []);
+      } catch (error) {
+        console.error('Error loading users in TaskCard:', error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUsers();
+  }, []);
+
   // Use == to handle string/number comparison
   const assignedUser = users.find(u => u.id == task.assignedTo);
   const createdByUser = users.find(u => u.id == task.createdBy);
@@ -14,15 +31,15 @@ const TaskCard = ({ task, currentUser, onTaskChange, onEdit }) => {
   const isOverdue = dueDate < today && task.status !== 'completed';
   const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
 
-  const handleStatusToggle = () => {
+  const handleStatusToggle = async () => {
     const newStatus = task.status === 'completed' ? 'active' : 'completed';
-    updateTask(task.id, { status: newStatus });
+    await updateTask(task.id, { ...task, status: newStatus });
     onTaskChange();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      deleteTask(task.id);
+      await deleteTask(task.id);
       onTaskChange();
     }
   };
@@ -43,6 +60,16 @@ const TaskCard = ({ task, currentUser, onTaskChange, onEdit }) => {
       year: 'numeric'
     });
   };
+
+  if (loading) {
+    return (
+      <div className="task-card">
+        <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`task-card ${task.status === 'completed' ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}`}>

@@ -19,13 +19,27 @@ const TaskForm = ({ user, task, onClose, onTaskChange }) => {
   const [users, setUsers] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const availableTags = ['urgent', 'documentation', 'backend', 'security', 'database', 'planning', 'frontend', 'testing'];
   const categories = ['personal', 'work', 'academic', 'development'];
   const priorities = ['low', 'medium', 'high'];
 
   useEffect(() => {
-    setUsers(getAllUsers());
+    const loadUsers = async () => {
+      try {
+        const usersList = await getAllUsers();
+        console.log('Loaded users:', usersList);
+        setUsers(Array.isArray(usersList) ? usersList : []);
+      } catch (error) {
+        console.error('Error loading users:', error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadUsers();
     
     if (task) {
       setFormData({
@@ -97,24 +111,29 @@ const TaskForm = ({ user, task, onClose, onTaskChange }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validate()) return;
 
-    const taskData = {
-      ...formData,
-      createdBy: task ? task.createdBy : user.id
-    };
+    try {
+      const taskData = {
+        ...formData,
+        createdBy: task ? task.createdBy : user.id
+      };
 
-    if (task) {
-      updateTask(task.id, taskData);
-    } else {
-      createTask(taskData);
+      if (task) {
+        await updateTask(task.id, taskData);
+      } else {
+        await createTask(taskData);
+      }
+
+      onTaskChange();
+      onClose();
+    } catch (error) {
+      console.error('Error submitting task:', error);
+      setErrors({ submit: 'Failed to save task. Please try again.' });
     }
-
-    onTaskChange();
-    onClose();
   };
 
   return (

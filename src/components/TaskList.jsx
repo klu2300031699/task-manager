@@ -8,10 +8,18 @@ const TaskList = ({ user, onTaskChange, onEditTask }) => {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('dueDate');
+  const [error, setError] = useState(null);
 
-  const loadTasks = () => {
-    const userTasks = getUserTasks(user.id);
-    setTasks(userTasks);
+  const loadTasks = async () => {
+    try {
+      const userTasks = await getUserTasks(user.id);
+      setTasks(Array.isArray(userTasks) ? userTasks : []);
+      setError(null);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      setTasks([]);
+      setError('Failed to load tasks');
+    }
   };
 
   useEffect(() => {
@@ -173,7 +181,15 @@ const TaskList = ({ user, onTaskChange, onEditTask }) => {
       </div>
 
       <div className="tasks-grid">
-        {filteredTasks.length === 0 ? (
+        {error && (
+          <div className="no-tasks" style={{ color: '#f56565' }}>
+            <p>{error}</p>
+            <button onClick={loadTasks} style={{ marginTop: '10px', padding: '8px 16px', cursor: 'pointer' }}>
+              Retry
+            </button>
+          </div>
+        )}
+        {!error && filteredTasks.length === 0 ? (
           <div className="no-tasks">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 11L12 14L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -187,15 +203,26 @@ const TaskList = ({ user, onTaskChange, onEditTask }) => {
             </p>
           </div>
         ) : (
-          filteredTasks.map(task => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              currentUser={user}
-              onTaskChange={onTaskChange}
-              onEdit={onEditTask}
-            />
-          ))
+          !error && filteredTasks.map(task => {
+            try {
+              return (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  currentUser={user}
+                  onTaskChange={onTaskChange}
+                  onEdit={onEditTask}
+                />
+              );
+            } catch (err) {
+              console.error('Error rendering task card:', err, task);
+              return (
+                <div key={task.id} className="task-card" style={{ padding: '20px', color: '#f56565' }}>
+                  Error loading task
+                </div>
+              );
+            }
+          })
         )}
       </div>
     </div>
